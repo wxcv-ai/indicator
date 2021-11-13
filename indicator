@@ -1,0 +1,96 @@
+//@version=4
+study("VWAP", overlay=true)
+
+// Inputs
+vwap_show = input(true, title='Show VWAP')
+vwap_buy_enabled = input(true, title='Enable VWAP Buy')
+vwap_sell_enabled = input(true, title='Enable VWAP Sell')
+vwapOffset = input(title='VWAP offset', defval=0)
+
+vwap1 = input(title='VWAP 1', defval=-7.3, type=input.float)
+buy1 = input(title='Buy line', defval=true)
+sell1 = input(title='Sell line', defval=false)
+
+vwap2 = input(title='VWAP 2', defval=-8.7, type=input.float)
+buy2 = input(title='Buy line', defval=true)
+sell2 = input(title='Sell line', defval=false)
+
+vwap3 = input(title='VWAP 3', defval=-10, type=input.float)
+buy3 = input(title='Buy line', defval=true)
+sell3 = input(title='Sell line', defval=false)
+
+vwap4 = input(title='VWAP 4', defval=-4, type=input.float)
+buy4 = input(title='Buy line', defval=false)
+sell4 = input(title='Sell line', defval=true)
+
+vwap5 = input(title='VWAP 5', defval=1, type=input.float)
+buy5 = input(title='Buy line', defval=false)
+sell5 = input(title='Sell line', defval=true)
+
+vwap6 = input(title='VWAP 6', defval=4, type=input.float)
+buy6 = input(title='Buy line', defval=false)
+sell6 = input(title='Sell line', defval=true)
+
+start = security(syminfo.tickerid, "D", time)
+
+newSession = iff(start > start[1], 1, 0)
+
+vwapsum = 0.0
+volumesum = 0.0
+vwapsum := iff(newSession[1], hlc3*volume, vwapsum[1]+hlc3*volume)
+volumesum := iff(newSession[1], volume, volumesum[1]+volume)
+vwap_now = vwapsum/volumesum
+
+color_1 = color(#42f5e3)
+color_2 = color(#38c7b8)
+color_3 = color(#3790bd)
+color_4 = color(#375bbd)
+color_5 = color(#8137bd)
+color_6 = color(#bf2647)
+
+vwap_1 = vwap_now + vwap_now / 100 * vwap1
+vwap_2 = vwap_now + vwap_now / 100 * vwap2
+vwap_3 = vwap_now + vwap_now / 100 * vwap3
+vwap_4 = vwap_now + vwap_now / 100 * vwap4
+vwap_5 = vwap_now + vwap_now / 100 * vwap5
+vwap_6 = vwap_now + vwap_now / 100 * vwap6
+
+plot(vwap_now, color=color.white, title='VWAP')
+
+plot_vwap1 = plot(vwap_1, color=color_1, title='VWAP 1', linewidth=2)
+plot_vwap2 = plot(vwap_2, color=color_2, title='VWAP 2', linewidth=2)
+plot_vwap3 = plot(vwap_3, color=color_3, title='VWAP 3', linewidth=2)
+plot_vwap4 = plot(vwap_4, color=color_4, title='VWAP 4', linewidth=2)
+plot_vwap5 = plot(vwap_5, color=color_5, title='VWAP 5', linewidth=2)
+plot_vwap6 = plot(vwap_6, color=color_6, title='VWAP 6', linewidth=2)
+
+is_signal(source, vwap_rate, down) =>
+    condition = down ? source < vwap_rate : crossunder(source, vwap_rate)
+    condition and (barssince(condition[1]) > 10 or na(barssince(condition[1])))
+
+tier1_buy = is_signal(low, vwap_1, true) and buy1
+tier2_buy = is_signal(low, vwap_2, true) and buy2
+tier3_buy = is_signal(low, vwap_3, true) and buy3
+tier4_buy = is_signal(low, vwap_4, true) and buy4
+tier5_buy = is_signal(low, vwap_5, true) and buy5
+tier6_buy = is_signal(low, vwap_6, true) and buy6
+tier1_sell = is_signal(low, vwap_1, false) and sell1
+tier2_sell = is_signal(low, vwap_2, false) and sell2
+tier3_sell = is_signal(low, vwap_3, false) and sell3
+tier4_sell = is_signal(low, vwap_4, false) and sell4
+tier5_sell = is_signal(low, vwap_5, false) and sell5
+tier6_sell = is_signal(low, vwap_6, false) and sell6
+
+plotshape(tier1_buy ? vwap_1 : na, style=shape.labelup, text='Buy 1', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
+plotshape(tier2_buy ? vwap_2 : na, style=shape.labelup, text='Buy 2', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
+plotshape(tier3_buy ? vwap_3 : na, style=shape.labelup, text='Buy 3', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
+plotshape(tier4_buy ? vwap_1 : na, style=shape.labelup, text='Buy 4', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
+plotshape(tier5_buy ? vwap_2 : na, style=shape.labelup, text='Buy 5', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
+plotshape(tier6_buy ? vwap_3 : na, style=shape.labelup, text='Buy 6', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
+
+plotshape(tier1_sell ? vwap_1 : na, style=shape.labeldown, text='Sell 1', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
+plotshape(tier2_sell ? vwap_2 : na, style=shape.labeldown, text='Sell 2', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
+plotshape(tier3_sell ? vwap_3 : na, style=shape.labeldown, text='Sell 3', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
+plotshape(tier4_sell ? vwap_4 : na, style=shape.labeldown, text='Sell 4', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
+plotshape(tier5_sell ? vwap_5 : na, style=shape.labeldown, text='Sell 5', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
+plotshape(tier6_sell ? vwap_6 : na, style=shape.labeldown, text='Sell 6', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
