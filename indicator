@@ -1,33 +1,75 @@
+bool attatchProc(char* procName)
+{
+	//Defining size of structure so we can populate it
+	procEntry32.dwSize = sizeof(PROCESSENTRY32);
+
+	//Taking a snapshot of all processes running
+	hProcSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+	if (hProcSnap == INVALID_HANDLE_VALUE)
+	{
+		std::cout << "Failed to take snapshot of process list." << std::endl;
+		return false;
+	}
+
+	//While there is a next process in the snapshot
+	while (Process32Next(hProcSnap, &procEntry32))
+	{
+		std::cout << procEntry32.szExeFile << std::endl;
+		//If the process we're looking for matches the current process in snapshot
+		if (!strcmp(procName, procEntry32.szExeFile))
+		{
+			//Outputting proc name and ID then getting all access to process and initialising a handle to the proc to we can read/write it's memory
+			std::cout << "Found process " << procEntry32.szExeFile << " with process ID " << procEntry32.th32ProcessID << std::endl;
+			hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, procEntry32.th32ProcessID);
+			pID = procEntry32.th32ProcessID;
+
+			if (hProc == NULL)
+			{
+				std::cout << "Failed getting handle to process." << std::endl;
+			}
+			//Close handle to process snapshot then return true
+			CloseHandle(hProcSnap);
+			return true;
+		}
+	}
+
+	std::cout << "Couldn't find " << procName << " in the process snapshot." << std::endl;
+	CloseHandle(hProcSnap);
+	return false;
+}
+
+
 //@version=4
-study("VWAP", overlay=true)
+study("volume_to_price", overlay=true)
 
 // Inputs
-vwap_show = input(true, title='Show VWAP')
-vwap_buy_enabled = input(true, title='Enable VWAP Buy')
-vwap_sell_enabled = input(true, title='Enable VWAP Sell')
-vwapOffset = input(title='VWAP offset', defval=0)
+volume_to_price_show = input(true, title='Show volume_to_price')
+volume_to_price_buy_enabled = input(true, title='Enable volume_to_price Buy')
+volume_to_price_sell_enabled = input(true, title='Enable volume_to_price Sell')
+volume_to_priceOffset = input(title='volume_to_price offset', defval=0)
 
-vwap1 = input(title='VWAP 1', defval=-7.3, type=input.float)
+volume_to_price1 = input(title='volume_to_price 1', defval=-7.3, type=input.float)
 buy1 = input(title='Buy line', defval=true)
 sell1 = input(title='Sell line', defval=false)
 
-vwap2 = input(title='VWAP 2', defval=-8.7, type=input.float)
+volume_to_price2 = input(title='volume_to_price 2', defval=-8.7, type=input.float)
 buy2 = input(title='Buy line', defval=true)
 sell2 = input(title='Sell line', defval=false)
 
-vwap3 = input(title='VWAP 3', defval=-10, type=input.float)
+volume_to_price3 = input(title='volume_to_price 3', defval=-10, type=input.float)
 buy3 = input(title='Buy line', defval=true)
 sell3 = input(title='Sell line', defval=false)
 
-vwap4 = input(title='VWAP 4', defval=-4, type=input.float)
+volume_to_price4 = input(title='volume_to_price 4', defval=-4, type=input.float)
 buy4 = input(title='Buy line', defval=false)
 sell4 = input(title='Sell line', defval=true)
 
-vwap5 = input(title='VWAP 5', defval=1, type=input.float)
+volume_to_price5 = input(title='volume_to_price 5', defval=1, type=input.float)
 buy5 = input(title='Buy line', defval=false)
 sell5 = input(title='Sell line', defval=true)
 
-vwap6 = input(title='VWAP 6', defval=4, type=input.float)
+volume_to_price6 = input(title='volume_to_price 6', defval=4, type=input.float)
 buy6 = input(title='Buy line', defval=false)
 sell6 = input(title='Sell line', defval=true)
 
@@ -35,11 +77,11 @@ start = security(syminfo.tickerid, "D", time)
 
 newSession = iff(start > start[1], 1, 0)
 
-vwapsum = 0.0
+volume_to_pricesum = 0.0
 volumesum = 0.0
-vwapsum := iff(newSession[1], hlc3*volume, vwapsum[1]+hlc3*volume)
+volume_to_pricesum := iff(newSession[1], hlc3*volume, volume_to_pricesum[1]+hlc3*volume)
 volumesum := iff(newSession[1], volume, volumesum[1]+volume)
-vwap_now = vwapsum/volumesum
+volume_to_price_now = volume_to_pricesum/volumesum
 
 color_1 = color(#42f5e3)
 color_2 = color(#38c7b8)
@@ -48,49 +90,49 @@ color_4 = color(#375bbd)
 color_5 = color(#8137bd)
 color_6 = color(#bf2647)
 
-vwap_1 = vwap_now + vwap_now / 100 * vwap1
-vwap_2 = vwap_now + vwap_now / 100 * vwap2
-vwap_3 = vwap_now + vwap_now / 100 * vwap3
-vwap_4 = vwap_now + vwap_now / 100 * vwap4
-vwap_5 = vwap_now + vwap_now / 100 * vwap5
-vwap_6 = vwap_now + vwap_now / 100 * vwap6
+volume_to_price_1 = volume_to_price_now + volume_to_price_now / 100 * volume_to_price1
+volume_to_price_2 = volume_to_price_now + volume_to_price_now / 100 * volume_to_price2
+volume_to_price_3 = volume_to_price_now + volume_to_price_now / 100 * volume_to_price3
+volume_to_price_4 = volume_to_price_now + volume_to_price_now / 100 * volume_to_price4
+volume_to_price_5 = volume_to_price_now + volume_to_price_now / 100 * volume_to_price5
+volume_to_price_6 = volume_to_price_now + volume_to_price_now / 100 * volume_to_price6
 
-plot(vwap_now, color=color.white, title='VWAP')
+plot(volume_to_price_now, color=color.white, title='volume_to_price')
 
-plot_vwap1 = plot(vwap_1, color=color_1, title='VWAP 1', linewidth=2)
-plot_vwap2 = plot(vwap_2, color=color_2, title='VWAP 2', linewidth=2)
-plot_vwap3 = plot(vwap_3, color=color_3, title='VWAP 3', linewidth=2)
-plot_vwap4 = plot(vwap_4, color=color_4, title='VWAP 4', linewidth=2)
-plot_vwap5 = plot(vwap_5, color=color_5, title='VWAP 5', linewidth=2)
-plot_vwap6 = plot(vwap_6, color=color_6, title='VWAP 6', linewidth=2)
+plot_volume_to_price1 = plot(volume_to_price_1, color=color_1, title='volume_to_price 1', linewidth=2)
+plot_volume_to_price2 = plot(volume_to_price_2, color=color_2, title='volume_to_price 2', linewidth=2)
+plot_volume_to_price3 = plot(volume_to_price_3, color=color_3, title='volume_to_price 3', linewidth=2)
+plot_volume_to_price4 = plot(volume_to_price_4, color=color_4, title='volume_to_price 4', linewidth=2)
+plot_volume_to_price5 = plot(volume_to_price_5, color=color_5, title='volume_to_price 5', linewidth=2)
+plot_volume_to_price6 = plot(volume_to_price_6, color=color_6, title='volume_to_price 6', linewidth=2)
 
-is_signal(source, vwap_rate, down) =>
-    condition = down ? source < vwap_rate : crossunder(source, vwap_rate)
+is_signal(source, volume_to_price_rate, down) =>
+    condition = down ? source < volume_to_price_rate : crossunder(source, volume_to_price_rate)
     condition and (barssince(condition[1]) > 10 or na(barssince(condition[1])))
 
-tier1_buy = is_signal(low, vwap_1, true) and buy1
-tier2_buy = is_signal(low, vwap_2, true) and buy2
-tier3_buy = is_signal(low, vwap_3, true) and buy3
-tier4_buy = is_signal(low, vwap_4, true) and buy4
-tier5_buy = is_signal(low, vwap_5, true) and buy5
-tier6_buy = is_signal(low, vwap_6, true) and buy6
-tier1_sell = is_signal(low, vwap_1, false) and sell1
-tier2_sell = is_signal(low, vwap_2, false) and sell2
-tier3_sell = is_signal(low, vwap_3, false) and sell3
-tier4_sell = is_signal(low, vwap_4, false) and sell4
-tier5_sell = is_signal(low, vwap_5, false) and sell5
-tier6_sell = is_signal(low, vwap_6, false) and sell6
+tier1_buy = is_signal(low, volume_to_price_1, true) and buy1
+tier2_buy = is_signal(low, volume_to_price_2, true) and buy2
+tier3_buy = is_signal(low, volume_to_price_3, true) and buy3
+tier4_buy = is_signal(low, volume_to_price_4, true) and buy4
+tier5_buy = is_signal(low, volume_to_price_5, true) and buy5
+tier6_buy = is_signal(low, volume_to_price_6, true) and buy6
+tier1_sell = is_signal(low, volume_to_price_1, false) and sell1
+tier2_sell = is_signal(low, volume_to_price_2, false) and sell2
+tier3_sell = is_signal(low, volume_to_price_3, false) and sell3
+tier4_sell = is_signal(low, volume_to_price_4, false) and sell4
+tier5_sell = is_signal(low, volume_to_price_5, false) and sell5
+tier6_sell = is_signal(low, volume_to_price_6, false) and sell6
 
-plotshape(tier1_buy ? vwap_1 : na, style=shape.labelup, text='Buy 1', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
-plotshape(tier2_buy ? vwap_2 : na, style=shape.labelup, text='Buy 2', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
-plotshape(tier3_buy ? vwap_3 : na, style=shape.labelup, text='Buy 3', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
-plotshape(tier4_buy ? vwap_1 : na, style=shape.labelup, text='Buy 4', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
-plotshape(tier5_buy ? vwap_2 : na, style=shape.labelup, text='Buy 5', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
-plotshape(tier6_buy ? vwap_3 : na, style=shape.labelup, text='Buy 6', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
+plotshape(tier1_buy ? volume_to_price_1 : na, style=shape.labelup, text='Buy 1', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
+plotshape(tier2_buy ? volume_to_price_2 : na, style=shape.labelup, text='Buy 2', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
+plotshape(tier3_buy ? volume_to_price_3 : na, style=shape.labelup, text='Buy 3', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
+plotshape(tier4_buy ? volume_to_price_1 : na, style=shape.labelup, text='Buy 4', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
+plotshape(tier5_buy ? volume_to_price_2 : na, style=shape.labelup, text='Buy 5', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
+plotshape(tier6_buy ? volume_to_price_3 : na, style=shape.labelup, text='Buy 6', location=location.absolute, color=color.green, transp=0, textcolor=color.white)
 
-plotshape(tier1_sell ? vwap_1 : na, style=shape.labeldown, text='Sell 1', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
-plotshape(tier2_sell ? vwap_2 : na, style=shape.labeldown, text='Sell 2', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
-plotshape(tier3_sell ? vwap_3 : na, style=shape.labeldown, text='Sell 3', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
-plotshape(tier4_sell ? vwap_4 : na, style=shape.labeldown, text='Sell 4', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
-plotshape(tier5_sell ? vwap_5 : na, style=shape.labeldown, text='Sell 5', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
-plotshape(tier6_sell ? vwap_6 : na, style=shape.labeldown, text='Sell 6', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
+plotshape(tier1_sell ? volume_to_price_1 : na, style=shape.labeldown, text='Sell 1', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
+plotshape(tier2_sell ? volume_to_price_2 : na, style=shape.labeldown, text='Sell 2', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
+plotshape(tier3_sell ? volume_to_price_3 : na, style=shape.labeldown, text='Sell 3', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
+plotshape(tier4_sell ? volume_to_price_4 : na, style=shape.labeldown, text='Sell 4', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
+plotshape(tier5_sell ? volume_to_price_5 : na, style=shape.labeldown, text='Sell 5', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
+plotshape(tier6_sell ? volume_to_price_6 : na, style=shape.labeldown, text='Sell 6', location=location.absolute, color=color.red, transp=0, textcolor=color.white)
