@@ -1,1 +1,1 @@
-# indicator
+# indicator for tradingview
